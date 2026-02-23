@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Financial Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Financial Dashboard</h2>
+
+    <div class="summary">
+
+        <div class="card income">
+            <h4>Total Income</h4>
+            <p>₹ {{ income or 0 }}</p>
+        </div>
+
+        <div class="card expense">
+            <h4>Total Expense</h4>
+            <p>₹ {{ expense or 0 }}</p>
+        </div>
+
+        <div class="card savings">
+            <h4>Savings</h4>
+            <p>₹ {{ savings or 0 }}</p>
+        </div>
+
+    </div>
+
+    <h3>Expense by Category</h3>
+
+    {% if category_data %}
+        <canvas id="categoryChart"></canvas>
+
+        <script type="application/json" id="category-data">
+            {{ category_data | tojson }}
+        </script>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const raw = document.getElementById('category-data') 
+                ? document.getElementById('category-data').textContent 
+                : null;
+
+            const categoryData = raw ? JSON.parse(raw) : null;
+
+            if (categoryData && Object.keys(categoryData).length > 0) {
+
+                const labels = Object.keys(categoryData);
+                const values = Object.values(categoryData);
+
+                const ctx = document.getElementById('categoryChart').getContext('2d');
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Expenses',
+                            data: values,
+                            backgroundColor: [
+                                '#4e73df',
+                                '#1cc88a',
+                                '#36b9cc',
+                                '#f6c23e',
+                                '#e74a3b',
+                                '#858796'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        });
+        </script>
+
+    {% else %}
+        <p>No expense data available yet.</p>
+    {% endif %}
+
+    <h3>Spending Clusters</h3>
+
+    {% if cluster_data %}
+        <ul>
+            {% for item in cluster_data %}
+                <li>
+                    ₹ {{ item.amount }} → Cluster {{ item.cluster }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Need at least 3 expense entries for clustering.</p>
+    {% endif %}
+
+    <a class="link-btn" href="/">Back to Add Transaction</a>
+
+</div>
+
+</body>
+</html>
